@@ -61,17 +61,17 @@ end
 %%Consolidated IDPs
 addpath('/Users/kayla/Box Sync/ThesisLab_April2021/ThesisProjectCode/Functions/github_repo (1)')
 %seperate by modality
-% FA = [mean(meanZ(1:3, :),1);  mean(meanZ(4:5, :),1); mean(meanZ(6:11, :),1); mean(meanZ(12:13, :),1); mean(meanZ(14:15, :),1); mean(meanZ(16:17, :),1); mean(meanZ(18:19, :),1)];
-% FAname = [{'Corpus Collosum', 'ALIC', 'Corona Radiata', 'Cingulum Cingulate Gyrus', 'Cingulum Hippocampus', 'Superior Longitudinal Fasciculus', 'Uncinate Fasciculus'}];
-% 
-% GMV = [mean(meanZ(21:22, :),1); mean(meanZ(23:26, :),1); mean(meanZ(27:32, :),1);  mean(meanZ(33:34, :),1); mean(meanZ(35:38, :),1);  mean(meanZ(39:40, :),1);  mean(meanZ(41:42, :),1); mean(meanZ(43:44, :),1); mean(meanZ(45:46, :),1); mean(meanZ(47:48, :),1)];
-% GMVname = [{'Insular Cortex', 'Superior Temporal Gyrus', 'Middle Temporal Gyrus', 'Frontal Medial Cortex', 'Cingulate Gyrus', 'Frontal Orbital Cortex', 'Thalamus', 'Hippocampus', 'Amygdala', 'Ventral Striatum'}];
-% 
-% CT = [mean(meanZ([49,55], :),1);  mean(meanZ([50,56], :),1); mean(meanZ([51,57], :),1); mean(meanZ([52,58], :),1); mean(meanZ([53, 59], :),1)];
-% CTname = [{'Entorhinal', 'Fusiform', 'Inferiorparietal', 'Parahippocampal', 'Superior Frontal'}];
-% 
-% FC = [mean(meanZ(61:63, :),1); mean(meanZ(64:65, :),1); mean(meanZ(66:67, :),1); mean(meanZ([68,69,74], :),1); mean(meanZ([70,71,75,76,79,80], :),1); mean(meanZ([72,73,77,78,81,82], :),1); meanZ(83, :); mean(meanZ([84,85,86,87], :),1); meanZ(88, :)];
-% FCname = [{'DMN Amplitude', 'CEN Amplitude', 'Salience Network Amplitude', 'DMN/DMN Connectivity', 'DMN/CEN Connectivity', 'DMN/SN Connectivity', 'CEN/CEN Connectivity', 'CEN/SN Connectivity', 'SN/SN Connectivity'}];
+FA = [mean(meanZ(1:3, :),1);  mean(meanZ(4:5, :),1); mean(meanZ(6:11, :),1); mean(meanZ(12:13, :),1); mean(meanZ(14:15, :),1); mean(meanZ(16:17, :),1); mean(meanZ(18:19, :),1)];
+FAname = [{'Corpus Collosum', 'ALIC', 'Corona Radiata', 'Cingulum Cingulate Gyrus', 'Cingulum Hippocampus', 'Superior Longitudinal Fasciculus', 'Uncinate Fasciculus'}];
+
+GMV = [mean(meanZ(21:22, :),1); mean(meanZ(23:26, :),1); mean(meanZ(27:32, :),1);  mean(meanZ(33:34, :),1); mean(meanZ(35:38, :),1);  mean(meanZ(39:40, :),1);  mean(meanZ(41:42, :),1); mean(meanZ(43:44, :),1); mean(meanZ(45:46, :),1); mean(meanZ(47:48, :),1)];
+GMVname = [{'Insular Cortex', 'Superior Temporal Gyrus', 'Middle Temporal Gyrus', 'Frontal Medial Cortex', 'Cingulate Gyrus', 'Frontal Orbital Cortex', 'Thalamus', 'Hippocampus', 'Amygdala', 'Ventral Striatum'}];
+
+CT = [mean(meanZ([49,55], :),1);  mean(meanZ([50,56], :),1); mean(meanZ([51,57], :),1); mean(meanZ([52,58], :),1); mean(meanZ([53, 59], :),1)];
+CTname = [{'Entorhinal', 'Fusiform', 'Inferiorparietal', 'Parahippocampal', 'Superior Frontal'}];
+
+FC = [mean(meanZ(61:63, :),1); mean(meanZ(64:65, :),1); mean(meanZ(66:67, :),1); mean(meanZ([68,69,74], :),1); mean(meanZ([70,71,75,76,79,80], :),1); mean(meanZ([72,73,77,78,81,82], :),1); meanZ(83, :); mean(meanZ([84,85,86,87], :),1); meanZ(88, :)];
+FCname = [{'DMN Amplitude', 'CEN Amplitude', 'SN Amplitude', 'DMN/DMN Connectivity', 'DMN/CEN Connectivity', 'DMN/SN Connectivity', 'CEN/CEN Connectivity', 'CEN/SN Connectivity', 'SN/SN Connectivity'}];
 
 %%sig IDPS
 % sigIDPs = [{'Right Anterior Corona Radiata FA', 'Right Superior Longitudinal Fasciculus FA', 'White Matter Hyperintensity', 'Cingulate Gyrus GMV', 'Amygdala GMV', 'Insular Cortex GMV', 'Superior Temporal Gyrus GMV', 'Frontal Orbital Cortex GMV', 'Entorhinal CT', 'Fusiform CT', 'Inferiorparietal CT', 'Superiorparietal CT', 'DMN/DMN Connectivity', 'CEN/SN Connectivity'}];
@@ -133,22 +133,22 @@ figure;
 t = tiledlayout(2,4);
 % title(t, 'Imaging Features for each Clinical Group')
 nexttile 
-spider_plot(FC(:,1:6)', 'AxesLabels', FCname, 'LabelFontSize',13, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none')
+spider_plot(FC(:,1:6)', 'AxesLabels', FCname, 'LabelFontSize',12, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none')
 %%% https://www.mathworks.com/matlabcentral/fileexchange/59561-spider_plot
 title('A. Resting State fMRI')
-set(gca,'FontSize',15)
+set(gca,'FontSize',14)
 nexttile
-spider_plot(GMV(:,1:6)', 'AxesLabels', GMVname, 'LabelFontSize',13, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none');
+spider_plot(GMV(:,1:6)', 'AxesLabels', GMVname, 'LabelFontSize',12, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none');
 title('B. Gray Matter Volume')
-set(gca,'FontSize',15)
+set(gca,'FontSize',14)
 nexttile
-spider_plot(CT(:,1:6)', 'AxesLabels', CTname, 'LabelFontSize', 13, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none')
+spider_plot(CT(:,1:6)', 'AxesLabels', CTname, 'LabelFontSize', 12, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none')
 title('C. Cortical Thickness')
-set(gca,'FontSize',15)
+set(gca,'FontSize',14)
 nexttile
-spider_plot(FA(:,1:6)','AxesLabels', FAname, 'LabelFontSize', 13, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none');
-title('D. Fractional Anisotropy') 
-set(gca,'FontSize',15)
+spider_plot(FA(:,1:6)','AxesLabels', FAname, 'LabelFontSize', 12, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none');
+title('D. Fractional Anisotropy')
+set(gca,'FontSize',14)
 % lg  = legend({'anhedonia','mood','somatic', 'chronic','late onset', 'severe'}); 
 % lg.Layout.Tile = 'South';
 
@@ -184,3 +184,50 @@ hold off
 vline([1.5 2.5 3.5 4.5 5.5 6.5 7.5 8.5 9.5 10.5 11.5 12.5 13.5 14.5 15.5]);
 %%%https://www.mathworks.com/matlabcentral/fileexchange/1039-hline-and-vline?tab=reviews%2F2081773
 legend({'Anhedonia','Low Mood','Somatic', 'Chronic','Late Onset', 'Acute Impairment', 'Heterogenous'},'Location','Northeast')
+
+
+%%
+figure
+spider_plot(FC(:,1:6)', 'AxesLabels', FCname, 'LabelFontSize',14, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none')
+%%% https://www.mathworks.com/matlabcentral/fileexchange/59561-spider_plot
+title('A. Resting State fMRI')
+set(gca,'FontSize',18)
+set(gcf, 'Position', [550   557   715   420])
+% print(gcf,'aim1figA_2dec22','-dpng','-r300');
+exportgraphics(gcf,'transparentA.eps',...   % since R2020a
+    'ContentType','vector',...
+    'BackgroundColor','none')
+close all
+
+figure
+spider_plot(GMV(:,1:6)', 'AxesLabels', GMVname, 'LabelFontSize',14, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none');
+title('B. Gray Matter Volume')
+set(gca,'FontSize',18)
+set(gcf, 'Position', [550   557   715   420])
+% print(gcf,'aim1figB_2dec22','-dpng','-r300');
+exportgraphics(gcf,'transparentB.eps',...   % since R2020a
+    'ContentType','vector',...
+    'BackgroundColor','none')
+close all
+
+figure
+spider_plot(CT(:,1:6)', 'AxesLabels', CTname, 'LabelFontSize', 14, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none')
+title('C. Cortical Thickness')
+set(gca,'FontSize',18)
+set(gcf, 'Position', [550   557   715   420])
+% print(gcf,'aim1figC_2dec22','-dpng','-r300');
+exportgraphics(gcf,'transparentC.eps',...   % since R2020a
+    'ContentType','vector',...
+    'BackgroundColor','none')
+close all
+
+figure
+spider_plot(FA(:,1:6)','AxesLabels', FAname, 'LabelFontSize', 14, 'AxesPrecision', 2, 'AxesLimits', [-.23, -.23, -.23, -.23, -.23, -.23, -.23; .12, .12, .12, .12, .12, .12, .12], 'AxesDisplay', 'one', 'AxesLabelsEdge', 'none');
+title('D. Fractional Anisotropy')
+set(gca,'FontSize',18)
+set(gcf, 'Position', [550   557   715   420])
+% print(gcf,'aim1figD_2dec22','-dpng','-r300');
+exportgraphics(gcf,'transparentD.eps',...   % since R2020a
+    'ContentType','vector',...
+    'BackgroundColor','none')
+close all
