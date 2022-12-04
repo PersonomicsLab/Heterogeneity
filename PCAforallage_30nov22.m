@@ -1,4 +1,4 @@
-%%PCA of Zs
+%% this is the main analysis script
 
 % add paths
 addpath('/Users/kayla/Box Sync/ThesisLab_April2021/ThesisProjectCode/Functions')
@@ -7,7 +7,7 @@ addpath('/Users/kayla/Box Sync/ThesisLab_April2021/ThesisProjectCode/Data/allage
 addpath('/Users/kayla/Box Sync/ThesisLab_April2021/ThesisProjectCode/Code')
 %load Z_TNM_case.csv
 Zs = table2array(readtable('Z_TNM_case.csv'));
-%load Z_TNM_case_eid.csv
+%load Z_TNM_case_eid.csv (the IDs)
 Zeids = table2array(readtable('Z_TNM_case_eid.csv'));
 
 %%load clinical group eids
@@ -30,7 +30,7 @@ hetero_eid = table2array(readtable('HomogeneousGroups_HeterogeneousComparison.cs
 [~, ih] = intersect(Zeids(:,1), hetero_eid(:,1)); Z{7} = Zs(ih, :);
 % [~, iad] = intersect(Zeids(:,1), anhdep_eid(:,1)); Zc{1} = Zs(iad, :);
 
-%% rerun ANOVA
+%% run ANOVA
 %%%create G 
 % [~, ih] = intersect(Zeids(:,1), hetero_eid(:,1));
 G(ia, 1) = 1;
@@ -51,33 +51,23 @@ c{i} = multcompare(stats{sigidx(i)});
 h{i}= find(c{i}(:,6) < 0.0500);
 end
 
-%clear ia im is ic il ise anhedonia_eid mood_eid somatic_eid chronic_eid lateonset_eid severe_eid Zs Zeids
+%clear ia im is ic il ise anhedonia_eid mood_eid somatic_eid chronic_eid lateonset_eid severe_eid Zeids
 
 %% bootstrap ANOVA
 %randomly select with replacement
-% run ANOVA
-%save what's significant (not post hoc though for now)
 for i = 1:100
     ix{i} = randi(length(Zs), [length(Zs),1]);
     data = Zs(ix{i},:);
     group = G(ix{i},:);
 for n = 1:size(Zs,2)
-    anovaPs(n) = anovan(data(:,n),group,'display','off');
+    anovaPs(n) = anovan(data(:,n),group,'display','off'); % run ANOVA
 end
 [pthr,pcor,padj] = fdr(anovaPs);
-sigidx100{i} = find(pcor < 0.0500);
+sigidx100{i} = find(pcor < 0.0500); %saved the indexes for the significant features
 
 end
 
 %% visualize
-% color = repmat([0.3010 0.7450 0.9330], [88,1]);
-% for i = 1:16
-% color(sigidx(i),:) = [0.6350 0.0780 0.1840];
-% end
-% histogram(cell2mat(sigidx100), 88, 'FaceColor', color)
-% ylabel('Number of Bootstraps Imaging Feature Was Significant')
-% xlabel('Imaging Feature (1-88)')
-
 figure;
 h = histogram(cell2mat(sigidx100), 88);
 b = bar(1:88,h.Values);
@@ -101,17 +91,17 @@ end
 %% kms bootstrap on PCA
 for i = 1:1000
     for n = 1:6
-        ix = randi(length(Z{n}), [length(Z{n}),1]);
+        ix = randi(length(Z{n}), [length(Z{n}),1]); %randomly select individuals
         data = Z{n}(ix,:);
-        [~, score, ~, ~, explained]= pca(Z{n});
+        [~, score, ~, ~, explained]= pca(Z{n}); %run PCA
         esum = zeros(88,1);
         esum(1) = explained(1);
         for b = 2:88
-            esum(b) = esum(b-1) + explained(b);
+            esum(b) = esum(b-1) + explained(b); 
         end
-        f = find(esum > 75);
+        f = find(esum > 75); %count up how many components to get to 75% variance explained
         fs(i) = f(1,1);
-        [kms{i,n}, ka(i,n)] = clusk(score(:,1:f(1,1)), 10); 
+        [kms{i,n}, ka(i,n)] = clusk(score(:,1:f(1,1)), 10); %cluster on the components that explain 75% variance
         i
     end
 end
@@ -125,6 +115,7 @@ folds = 10;
 for x = 1:100
     for i = 1:folds
         for n = 1:6
+            %%%break data into 90% train fold and 10% left out fold
             c = cvpartition(size(Z{n},1),'KFold',folds);
             idxTrain{x,i,n} = training(c, i);
             Z_Train{x,i, n} = Z{n}(idxTrain{x,i,n},:);
@@ -135,21 +126,21 @@ for x = 1:100
 
     for i = 1:folds
         for n = 1:6
-            [coeff{x,i,n}, score_temp{x,i,n}, ~,~,explained] = pca(Z_Train{x, i, n}); %%I think I need to save out the weights of this PCA to use 2 steps down
+            [coeff{x,i,n}, score_temp{x,i,n}, ~,~,explained] = pca(Z_Train{x, i, n}); %%apply PCA on training data
             esum = zeros(88,1);
             esum(1) = explained(1);
             for b = 2:88
                 esum(b) = esum(b-1) + explained(b);
             end
-            f = find(esum > 75);
-            %%%%I don't understand why centroid is 2x27 when score_temp is
-            %%%%282x32
-            [kms_temp{x,i,n}, centroid{x,i,n}] = kmeans(score_temp{x,i,n}(:,1:f(1,1)), cluster(n)); 
+            f = find(esum > 75); %get 75% variance explained components for training data
+            [kms_temp{x,i,n}, centroid{x,i,n}] = kmeans(score_temp{x,i,n}(:,1:f(1,1)), cluster(n)); %apply kmeans on training data
             score = Z_New{x,i, n}*coeff{x,i,n}; 
             score_new{x,i,n} = score(:,1:f(1,1));
         end
     end
     
+    %%%% from the weights of trained PCA and centroids of trained k-means,
+    %%%% you can calculate where the left out 10% would have ended up
     for i = 1:folds
         for n=1:6
             for j = 1:size(centroid{x,i,n}, 1)
@@ -160,24 +151,26 @@ for x = 1:100
             end
             total{x,i, n} = zeros(1,length(idxTrain{x,i,n}));
             total{x,i, n}(:,idxTrain{x,i,n}) = kms_temp{x,i,n};
-            total{x,i, n}(:,idxNew{x,i,n}) = cl_idx{x,i,n};     
+            total{x,i, n}(:,idxNew{x,i,n}) = cl_idx{x,i,n};     %%dataset with the k-mean assignment of 90% trained AND 10% leftout
         end
     end
 end
-%%
-     %%%ARI
+%% ARI
  for n = 1:6
     for x = 1:100
         for i = 1:folds
             for j = i+1:folds
+                %%%calculate ARI between the 10 folds
                 ARI_val(i,j) = rand_index(total{x,i,n},total{x,j,n}, 'adjusted'); %https://www.mathworks.com/matlabcentral/fileexchange/49908-adjusted-rand-index
                 ARI_all{n,x}(i,j) = ARI_val(i,j);
 
             end  
         end
+        %%%mean the ARI for the folds in each iteration, getting ARIs for
+        %%%each iteration (100 iterations)
         ARI_val100 = mean(ARI_val(find(~tril(ones(size(ARI_val))))));
     end
-    ARI_dist{n} = mean(ARI_val100);
+    ARI_dist{n} = mean(ARI_val100); %mean the ARIs for the 100 iterations for a final ARI reported in manuscript
     n
  end
 
@@ -185,7 +178,6 @@ end
 for n = 1:6
      [~, score_final{n}]= pca(Z{n});
      kms_final{n} = kmeans(score_final{n}, cluster(n)); 
-%    kms_final{n} = kmeans(score_final{n}(:, 1:choice), cluster(n)); 
 end
 save('PCA_ARI_allage_75jul8.mat', 'ARI_dist', 'total', 'kms', 'ka', 'cluster')
 save('finalPCAscores_kms_allage_75jul8.mat', 'kms_final', 'score_final')
@@ -193,18 +185,17 @@ save('finalPCAscores_kms_allage_75jul8.mat', 'kms_final', 'score_final')
 
 %% validations
 
-%% cognition
+%%% cognition
 %load cognition again. select the 2, multiply the 2 by the weights
 D = readtable('Cognition.tsv','FileType','text');
 D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
 Reasoning = [D.x20016_0_0 D.x20016_2_0];
 ReactionTime = [D.x20023_0_0 D.x20023_2_0];
-% COG = [D.eid 0.774*Reasoning + -0.491*log(ReactionTime)];
 COG = [D.eid 0.768*Reasoning + -0.768*log(ReactionTime)];
 COG0 = COG(:,1);
 COG2 = COG(:,2);
 
-[~, ia] = intersect(COG(:,1), anhedonia_eid(:,1)); cogs{1} = COG(ia, 2); %used time point 0 because it had more data
+[~, ia] = intersect(COG(:,1), anhedonia_eid(:,1)); cogs{1} = COG(ia, 2); %used time point 0 because it had WAY more data
 [~, im] = intersect(COG(:,1), mood_eid(:,1)); cogs{2} = COG(im, 2);
 [~, is] = intersect(COG(:,1), somatic_eid(:,1)); cogs{3} = COG(is, 2);
 [~, ic] = intersect(COG(:,1), chronic_eid(:,1)); cogs{4} = COG(ic, 2);
@@ -232,7 +223,8 @@ end
 
 %%%%groups 4 and 6 are significantly different
 
-%% neuroticism (anhedonia was significant but BARELY, prolly not past correction)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%neuroticism (anhedonia was significant but BARELY, prolly not past correction - FDR correction in different script)
 D = readtable('kayla.tsv','FileType','text');
 D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
 N12 = sum([D.x1920_0_0, D.x1930_0_0, D.x1940_0_0, D.x1950_0_0, D.x1960_0_0, D.x1970_0_0, D.x1980_0_0, D.x1990_0_0, D.x2000_0_0, D.x2010_0_0, D.x2020_0_0, D.x2030_0_0], 2);
@@ -257,7 +249,8 @@ for i=1:6
         [p_N_6(i), N_tbl{i}] = anova1(N_zscore{i}, kms_N{i},  'display', 'off');
 end
 
-%% townsend
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% townsend %no significant differences
 %load kms_final ('finalPCAscores_kms_allage_75jul8.mat')
 D = readtable('kayla.tsv','FileType','text');
 D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
@@ -283,7 +276,7 @@ for i=1:6
         [p_T_6(i), T_tbl{i}] = anova1(T_zscore{i}, kms_T{i},  'display', 'off');
 end
 
-%% phenotype Ts from Fs
+%% calculate Ts from Fs for phenotype validation
 for i = 1:6
    C_t(i) = sqrt(cell2mat(C_tbl{i}(2,5)));
    N_t(i) = sqrt(cell2mat(N_tbl{i}(2,5)));
