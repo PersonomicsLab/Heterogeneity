@@ -1,0 +1,159 @@
+%% panel A - ARI of all clusters
+% prep for the figure
+
+%ARI error bars
+load('mainanalysisresults.mat', 'ARI_all', 'ARI_dist', 'ARI_dist_null')
+
+ARImean = cell2mat(ARI_dist);
+
+for i = 1:6
+    ARIall = cell2mat(ARI_all(i, :));
+    ARIall(ARIall==0)=NaN;
+    ARISEM{i} = nanstd(ARIall, [], 'all')/sqrt(900);
+end
+ARIsem = cell2mat(ARISEM);
+clear ARIall i
+
+% figure
+figure
+bar([1:6], cell2mat(ARI_dist))
+text([1:6], cell2mat(ARI_dist)', num2str(cell2mat(ARI_dist)','%0.2f'),'HorizontalAlignment','center','VerticalAlignment','bottom')
+set(gca,'FontSize',14)
+ylabel('Adjusted Rand Index')
+ylim([0, 1])
+xticklabels({'Anhedonia', 'Low Mood', 'Somatic', 'Chronic', 'Late Onset', 'Acute Impairment'})
+hold on
+er = errorbar([1:6],ARImean, ARIsem,ARIsem);    
+er.Color = [0 0 0];                            
+er.LineStyle = 'none';  
+hold off
+title('Cluster Stability For All Clinically Dissociated Groups')
+hline(mean(cell2mat(ARI_dist_null)))
+t = annotation('textbox', [0.0657, 0.135, 0.1, 0.1], 'String', "Null Threshold", 'EdgeColor', 'none', 'FontSize',12);
+% print(gcf,'aim2_ARI_results','-dpng','-r300');
+%% panel B - violin plot of phenotypes for acute imapirment clusters
+%%%%%%%prep
+% load cluster assignment data
+load('mainanalysisresults.mat', 'acuteimpairment_eid', 'kms_final')
+load('include.mat')
+acuteimpair_keep_eids = intersect(acuteimpairment_eid, include);
+clear include
+clust1_eids = acuteimpair_keep_eids(kms_final{6} == 1);
+clust2_eids = acuteimpair_keep_eids(kms_final{6} == 2);
+
+
+%%%%%% Cognition
+%load cognition data
+D = readtable([cog_dir 'Cognition.tsv'],'FileType','text');
+D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
+Reasoning = [D.x20016_0_0]; 
+ReactionTime = [D.x20023_0_0]; 
+COG = [D.eid 0.768*Reasoning + -0.768*log(ReactionTime)];
+
+cog_nanless = COG(~isnan(COG(:,2)), :);
+clear D Reasoning ReactionTime COG
+[~, ic1] = intersect(cog_nanless(:,1), clust1_eids);
+[~, ic2] = intersect(cog_nanless(:,1), clust2_eids);
+cog_nanless1 =  cog_nanless(ic1, 2);
+cog_nanless2 =  cog_nanless(ic2, 2);
+clear cog_nanless
+
+%%add control mean line for violin plot
+control_eid = table2array(readtable('/Users/kayla/Library/CloudStorage/Box-Box/ThesisLab_April2021/ThesisProjectCode/Data/allage/Revisions/HomogeneousGroups_healthycontrols_i2old.csv'));
+[~, control_cog_idx] = intersect(D.eid, control_eid);
+control_cog_mean = mean(COG(control_cog_idx, 2), 'omitnan');
+
+
+
+%%%%% Neuroticism
+D = readtable('neuroticism.tsv','FileType','text');
+D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
+N12 = sum([D.x1920_0_0, D.x1930_0_0, D.x1940_0_0, D.x1950_0_0, D.x1960_0_0, D.x1970_0_0, D.x1980_0_0, D.x1990_0_0, D.x2000_0_0, D.x2010_0_0, D.x2020_0_0, D.x2030_0_0], 2);
+N = [D.eid N12];
+N_nanless = N(~isnan(N(:,2)), :);
+clear D N12 N
+[~, in1] = intersect(N_nanless(:,1), clust1_eids);
+[~, in2] = intersect(N_nanless(:,1), clust2_eids);
+N_nanless1 =  N_nanless(in1, 2);
+N_nanless2 =  N_nanless(in2, 2);
+clear N_nanless
+
+
+
+%%%% Townsend
+D = readtable('townsend.tsv','FileType','text');
+D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
+T = [D.eid D.x189_0_0];
+T_nanless = T(~isnan(T(:,2)), :);
+clear D T
+[~, it1] = intersect(T_nanless(:,1), clust1_eids);
+[~, it2] = intersect(T_nanless(:,1), clust2_eids);
+T_nanless1 =  T_nanless(it1, 2);
+T_nanless2 =  T_nanless(it2, 2);
+clear T_nanless
+
+%%violin plot
+space = 3;
+pos1 = 2;
+pos2 = 2.7;
+
+figure;
+title('Cluster Differences For the Acute Impairment Group')
+tiledlayout(1,3)
+nexttile
+violin({cog_nanless1, cog_nanless2}, 'facecolor', [0 0.5 0.8; 1 0.0 0.0], 'medc', '')
+set(gca,'xticklabel',{'Cluster 1', 'Cluster 2'})
+ylabel('Cognition Score')
+t = annotation('textbox', [0.1, 0.75, 0.1, 0.1], 'String', "***");
+t.LineStyle = 'none';
+t.FontSize = 24;
+hline(control_cog_mean)
+t1 = annotation('textbox', [0.085, 0.413, 0.1, 0.1], 'String', "control", 'color', [.7 0.1 0.1]);
+t1.LineStyle = 'none';
+t1.FontSize = 12;
+
+nexttile
+violin({N_nanless1, N_nanless2}, 'facecolor', [0 0.5 0.8; 1 0.0 0.0], 'medc', '')
+set(gca,'xticklabel',{'Cluster 1', 'Cluster 2'})
+ylabel('Neuroticism Score')
+
+nexttile
+violin({T_nanless1, T_nanless2}, 'facecolor', [0 0.5 0.8; 1 0.0 0.0], 'medc', '')
+set(gca,'xticklabel',{'Cluster 1', 'Cluster 2'})
+ylabel('Townsend Score')
+%% panel c - spider plot prep
+meanZ1 = mean(Z{6}(kms_final{6} == 1, :),1)';
+meanZ2 = mean(Z{6}(kms_final{6} == 2, :),1)';
+
+%%seperate by modality
+mean_mods = [mean(meanZ1(1:20,:),1), mean(meanZ1(20:50,:),1), mean(meanZ1(51:62,:),1), mean(meanZ1(63:90,:),1); mean(meanZ2(1:20,:),1), mean(meanZ2(20:50,:),1), mean(meanZ2(51:62,:),1), mean(meanZ2(63:90,:),1); 0, 0, 0, 0];
+mod_names = [{'FA', 'GMV', 'CT', 'FC'}];
+
+%%spider plot figure
+figure
+spider_plot(mean_mods(1:3, :),'AxesLabels', mod_names, 'LabelFontSize', 12, 'AxesPrecision', 3, 'AxesLabelsEdge', 'none', 'AxesLimits', [-.5, -.5, -.5, -.5; .6, 0.6, 0.6, .6], 'color', ['b'; 'r'; 'k']);
+lg  = legend({'cluster 1','cluster 2', 'zero'}); 
+% print(gcf,'aim2_spider','-dpng','-r300');
+%% acute impairment cluster demographics table
+%load clinical data
+D = readtable('clinicalcovariates','FileType','text');
+D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
+[~, ia] = intersect(D.eid, acuteimpair_keep_eids);
+D_a = D(ia, :);
+clear D
+
+
+sex = D_a.x31_0_0;
+age = D_a.x21003_2_0;
+RDS = sum([D_a.x2050_2_0 D_a.x2060_2_0 D_a.x2070_2_0 D_a.x2080_2_0],2);
+
+%%% get the clustering index
+[~, ia_1] = intersect(D_a.eid, acuteimpair_keep_eids(kms_final{6} == 1));
+[~, ia_2] = intersect(D_a.eid, acuteimpair_keep_eids(kms_final{6} == 2));
+
+summary = table([length(ia_1); length(ia_2)],'RowNames',{'Cluster 1', 'Cluster 2'},'VariableNames',{'Number_of_subjects'});  
+summary.Mean_age = [mean(age(ia_1)); mean(age(ia_2))];
+summary.Std_age = [std(age(ia_1)); std(age(ia_2));];
+summary.Sex_male_percent = [sum(sex(ia_1)); sum(sex(ia_2))];
+summary.Sex_male_percent = summary.Sex_male_percent./summary.Number_of_subjects.*100;
+summary.Mean_RDSsum = [mean(RDS(ia_1)); mean(RDS(ia_2))];

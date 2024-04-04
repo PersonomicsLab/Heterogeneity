@@ -1,0 +1,120 @@
+%% get RDS and GAD and Neuroticism for clinical groups
+% GAD: 20506, 20509, 20520, 20515, 20516, 20505, 20512 instance 0
+% neuroticism: 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010,
+% 2020, 2030 instance 2
+D = readtable('GAD_neuroticism_RDS.tsv','FileType','text');
+D = standardizeMissing(D,-3); D = standardizeMissing(D,-1); D = standardizeMissing(D,-818); D = standardizeMissing(D,-121); D = standardizeMissing(D,-7);
+load('mainanalysis_results.mat', 'new_eids', 'G')
+
+[Zeids, eid_idx, eids_idx] = intersect(D.eid, new_eids); 
+D = D(eid_idx, :);
+GADsum = sum([D.x20506_0_0, D.x20509_0_0, D.x20520_0_0, D.x20515_0_0, D.x20516_0_0, D.x20505_0_0, D.x20512_0_0], 2, "omitnan");
+Nsum = sum([D.x1920_0_0, D.x1930_0_0, D.x1940_0_0, D.x1950_0_0, D.x1960_0_0, D.x1970_0_0, D.x1980_0_0, D.x1990_0_0, D.x2000_0_0, D.x2010_0_0, D.x2020_0_0, D.x2030_0_0], 2, "omitnan");
+RDSsum = sum([D.x2050_2_0, D.x2060_2_0, D.x2070_2_0, D.x2080_2_0], 2, "omitnan");
+clear D
+
+%%anovas for GAD, N, and RDS
+[GADsum_p, tbl, stats] = anovan(GADsum,G,'display','off');
+c = multcompare(stats);
+p_f_GAD = [c(:,6), c(:,4)];
+h_GAD = find(c(:,6) < 0.05);
+
+[Nsum_p, tbl, stats] = anovan(Nsum,G,'display','off');
+c = multcompare(stats);
+p_f_N = [c(:,6), c(:,4)];
+h_N = find(c(:,6) < 0.05);
+
+[RDSsum_p, ~, stats] = anovan(RDSsum,G,'display','off');
+c = multcompare(stats);
+p_f_RDS = [c(:,6), c(:,4)];
+h_RDS = find(c(:,6) < 0.05);
+
+allsum_p = [GADsum_p; Nsum_p; RDSsum_p];
+pFDR = mafdr(allsum_p);
+sigidx = find(pFDR < 0.05);
+%% prep for bar graph
+%%select Zs for groups in cell array
+%% it's only Z here so I can copy andpaste previous code, this data is not z-scored
+Zs = [GADsum, Nsum, RDSsum];
+
+anhedonia_eid = table2array(readtable('anhedonia.csv'));
+lowmood_eid = table2array(readtable('lowmood.csv'));
+somatic_eid = table2array(readtable('somatic.csv'));
+chronic_eid = table2array(readtable('chronic.csv'));
+lateonset_eid = table2array(readtable('lateonset.csv'));
+acuteimpair_eid = table2array(readtable('acuteimpairment.csv'));
+heterogeneous_eid = table2array(readtable('heterogeneousComparison.csv'));
+
+[~, ia] = intersect(Zeids(:,1), anhedonia_eid(:,1)); Z{1} = Zs(ia, :);
+[~, im] = intersect(Zeids(:,1), mood_eid(:,1)); Z{2} = Zs(im, :);
+[~, is] = intersect(Zeids(:,1), somatic_eid(:,1)); Z{3} = Zs(is, :);
+[~, ic] = intersect(Zeids(:,1), chronic_eid(:,1)); Z{4} = Zs(ic, :);
+[~, il] = intersect(Zeids(:,1), lateonset_eid(:,1)); Z{5} = Zs(il, :);
+[~, ise] = intersect(Zeids(:,1), acuteimpair_eid(:,1)); Z{6} = Zs(ise, :);
+[~, ih] = intersect(Zeids(:,1), heterogeneous_eid(:,1)); Z{7} = Zs(ih, :);
+
+%%% prep c, meanZ, and SEM for bar plot
+clear c
+for i = 1:length(sigidx)
+    [~, ~, stats] = anovan(Zs(:,sigidx(i)),G,'display','off');
+   c{i} =  multcompare(stats);
+end
+for i = 1:7
+    meanZ(:,i) = mean(Z{i},1);
+end
+
+for i = 1:7
+for x = 1:size(meanZ,1)
+    SEM(x,i) = std(Z{i}(:,x))/sqrt(size(Z{i},2));
+end
+end
+
+%%bar plot
+figure
+bar(meanZ)
+ylabel('Mean Score')
+xticklabels({'GAD Sum', 'N Sum', 'RDS Sum'})
+legend('Anhedonia','Low Mood', 'Somatic', 'Chronic', 'Late Onset', 'Acute Impairment', 'Heterogeneous')
+stat = stats_from_c(c);
+[stats_Y,stats_X1,stats_X2] = plot_stats(gca,stat);
+hold on
+% Find the number of groups and the number of bars in each group
+[ngroups, nbars] = size(meanZ);
+% Calculate the width for each bar group
+groupwidth = min(0.8, nbars/(nbars + 1.5));
+% Set the position of each error bar in the centre of the main bar
+% Based on barweb.m by Bolu Ajiboye from MATLAB File Exchange
+for i = 1:nbars
+% Calculate center of each bar
+x = (1:ngroups) - groupwidth/2 + (2*i-1) * groupwidth / (2*nbars);
+er = errorbar(x, meanZ(:,i), SEM(:,i), 'k', 'linestyle', 'none');
+end
+er.Color = [0 0 0];                            
+er.LineStyle = 'none'; 
+legend('Anhedonia','Low Mood', 'Somatic', 'Chronic', 'Late Onset', 'Acute Impairment', 'Heterogeneous')
+
+% print(gcf,'mentalhealth_severity_bar','-dpng','-r300');
+%% Functions
+function [stats, ctrack, ptrack] = stats_from_c(stats_cell)
+
+num_imag = length(stats_cell);
+num_colors = max(stats_cell{1}(:,2));
+
+stats = zeros(num_colors, num_colors, num_imag,  num_imag);
+
+for i=1:num_imag
+    for j=1:size(stats_cell{i},1)
+        colors = stats_cell{i}(j,1:2);
+        ctrack{i,j} = colors;
+        pval = stats_cell{i}(j,6);
+        ptrack{i,j} = pval;
+        if 0.001 < pval < 0.05
+            stats(colors(1), colors(2), i, i) = floor(-log10(pval));
+        end
+        if pval < 0.001
+             stats(colors(1), colors(2), i, i) = 3;
+        end
+    end
+end
+
+end
